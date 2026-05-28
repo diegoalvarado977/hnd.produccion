@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Config" ADD COLUMN     "comebackPiso" DECIMAL(65,30) NOT NULL DEFAULT 0.05,
+ALTER COLUMN "comebackTecho" SET DEFAULT 0.25;

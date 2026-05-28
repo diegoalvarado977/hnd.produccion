@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Config {
+  id               Int     @id @default(autoincrement())
+  hrsPorSemana     Decimal @default(47.5)
+  factorMO         Decimal @default(0.6)
+  tarifaHora       Decimal @default(300)
+  eficienciaPiso   Decimal @default(0.40)
+  eficienciaTecho  Decimal @default(0.75)
+  comebackPiso     Decimal @default(0.05)
+  comebackTecho    Decimal @default(0.25)
+  aTiempoPiso      Decimal @default(0.55)
+  aTiempoTecho     Decimal @default(0.85)
+  pesoEficiencia   Int     @default(30)
+  pesoComeback     Int     @default(20)
+  pesoATiempo      Int     @default(20)
+  pesoCabina       Int     @default(10)
+  pesoInventario   Int     @default(10)
+  pesoLimpieza     Int     @default(10)
+  bonoMaximo       Decimal @default(2000)
+}
+
+model Tecnico {
+  id          Int                @id @default(autoincrement())
+  nombre      String             @unique
+  activo      Boolean            @default(true)
+  ots         OTTecnico[]
+  asistencias AsistenciaSemana[]
+}
+
+model OT {
+  id           Int             @id @default(autoincrement())
+  numero       String          @unique
+  unidad       String
+  precio       Decimal
+  tipoCliente  TipoCliente
+  estado       EstadoOT        @default(EN_PROCESO)
+  comeback     Boolean         @default(false)
+  fechaEntrada DateTime
+  fechaPromesa DateTime
+  fechaEntrega DateTime?
+  aTiempo      Boolean?
+  notas        String?
+  tecnicos     OTTecnico[]
+  avances      AvanceSemanal[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model OTTecnico {
+  id        Int     @id @default(autoincrement())
+  ot        OT      @relation(fields: [otId], references: [id], onDelete: Cascade)
+  otId      Int
+  tecnico   Tecnico @relation(fields: [tecnicoId], references: [id])
+  tecnicoId Int
+  posicion  Int
+  horas     Decimal
+  @@unique([otId, posicion])
+}
+
+model AvanceSemanal {
+  id              Int      @id @default(autoincrement())
+  ot              OT       @relation(fields: [otId], references: [id], onDelete: Cascade)
+  otId            Int
+  semanaInicio    DateTime
+  horasInvertidas Decimal
+  @@unique([otId, semanaInicio])
+}
+
+model AsistenciaSemana {
+  id           Int      @id @default(autoincrement())
+  tecnico      Tecnico  @relation(fields: [tecnicoId], references: [id])
+  tecnicoId    Int
+  semanaInicio DateTime
+  lunes        Boolean  @default(true)
+  martes       Boolean  @default(true)
+  miercoles    Boolean  @default(true)
+  jueves       Boolean  @default(true)
+  viernes      Boolean  @default(true)
+  sabado       Boolean  @default(true)
+  @@unique([tecnicoId, semanaInicio])
+}
+
+model EvaluacionManual {
+  id           Int      @id @default(autoincrement())
+  semanaInicio DateTime @unique
+  cabina       Int
+  inventario   Int
+  limpieza     Int
+  notas        String?
+}
+
+enum TipoCliente {
+  PARTICULAR
+  FLOTILLA
+}
+
+enum EstadoOT {
+  EN_PROCESO
+  CERRADA
+}

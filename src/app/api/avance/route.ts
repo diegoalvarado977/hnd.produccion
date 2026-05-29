@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { calcHrsAvanceCapped } from '@/lib/calculos'
@@ -5,7 +6,7 @@ import { calcHrsAvanceCapped } from '@/lib/calculos'
 // GET /api/avance?semana=2026-05-25
 export async function GET(req: Request) {
   const semana = new URL(req.url).searchParams.get('semana')
-  if (!semana) return NextResponse.json({ error: 'Parámetro semana requerido' }, { status: 400 })
+  if (!semana) return NextResponse.json({ error: 'ParÃ¡metro semana requerido' }, { status: 400 })
 
   const dayStart = new Date(semana + 'T00:00:00')
   const dayEnd   = new Date(semana + 'T23:59:59')
@@ -43,7 +44,7 @@ export async function GET(req: Request) {
       id:              ot.id,
       numero:          ot.numero,
       unidad:          ot.unidad,
-      tecnicos:        ot.tecnicos.map((t) => t.tecnico.nombre).join(' · '),
+      tecnicos:        ot.tecnicos.map((t) => t.tecnico.nombre).join(' Â· '),
       hrsCalc,
       hrsYaContadas:   Math.round(hrsYaContadas * 100) / 100,
       hrsDisponibles,
@@ -77,3 +78,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true })
 }
+

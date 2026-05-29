@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { calcHrsCalc, calcHrsAvanceCapped, calcCapacidad, CAPACIDAD_MAX, DIAS_DEFAULT, type DiasSemana } from '@/lib/calculos'
@@ -5,7 +6,7 @@ import { calcHrsCalc, calcHrsAvanceCapped, calcCapacidad, CAPACIDAD_MAX, DIAS_DE
 // GET /api/dashboard?semana=2026-05-25
 export async function GET(req: Request) {
   const semana = new URL(req.url).searchParams.get('semana')
-  if (!semana) return NextResponse.json({ error: 'Parámetro semana requerido' }, { status: 400 })
+  if (!semana) return NextResponse.json({ error: 'ParÃ¡metro semana requerido' }, { status: 400 })
 
   const dayStart = new Date(semana + 'T00:00:00')
   const semFin   = new Date(dayStart)
@@ -48,22 +49,22 @@ export async function GET(req: Request) {
   )
 
   const result = tecnicos.map((tec) => {
-    // ── OTs asignadas esta semana ──────────────────────────────────────────
+    // â”€â”€ OTs asignadas esta semana â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const otsAsignadas = otsRecibidasSemana.filter(
       (o) => o.tecnicos.some((t) => t.tecnicoId === tec.id)
     ).length
 
-    // ── OTs cerradas esta semana donde participó ───────────────────────────
+    // â”€â”€ OTs cerradas esta semana donde participÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const otsCerradas = otsCerradasSemana.filter(
       (o) => o.tecnicos.some((t) => t.tecnicoId === tec.id)
     ).length
 
-    // ── Comebacks recibidos esta semana donde participó ────────────────────
+    // â”€â”€ Comebacks recibidos esta semana donde participÃ³ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const comebacks = otsRecibidasSemana.filter(
       (o) => o.comeback && o.tecnicos.some((t) => t.tecnicoId === tec.id)
     ).length
 
-    // ── Hrs de OTs CERRADAS (proporción) ──────────────────────────────────
+    // â”€â”€ Hrs de OTs CERRADAS (proporciÃ³n) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     let hrsCerradas = 0
     for (const ot of otsCerradasSemana) {
       const tecAsig = ot.tecnicos.find((t) => t.tecnicoId === tec.id)
@@ -74,7 +75,7 @@ export async function GET(req: Request) {
       hrsCerradas += hrsCalc * (Number(tecAsig.horas) / totalHoras)
     }
 
-    // ── Hrs de OTs EN PROCESO esta semana (proporción del avance capped) ──
+    // â”€â”€ Hrs de OTs EN PROCESO esta semana (proporciÃ³n del avance capped) â”€â”€
     let hrsEnProceso = 0
     for (const ot of otsConAvance) {
       const tecAsig = ot.tecnicos.find((t) => t.tecnicoId === tec.id)
@@ -91,7 +92,7 @@ export async function GET(req: Request) {
       hrsEnProceso += capped * (Number(tecAsig.horas) / totalHoras)
     }
 
-    // ── Capacidad según asistencia ─────────────────────────────────────────
+    // â”€â”€ Capacidad segÃºn asistencia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const asist = asistencias.find((a) => a.tecnicoId === tec.id)
     const dias: DiasSemana = asist
       ? { lunes: asist.lunes, martes: asist.martes, miercoles: asist.miercoles,
@@ -122,3 +123,4 @@ export async function GET(req: Request) {
 
   return NextResponse.json(result)
 }
+

@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
@@ -9,7 +10,7 @@ import {
 // GET /api/reporte?semana=2026-05-25
 export async function GET(req: Request) {
   const semana = new URL(req.url).searchParams.get('semana')
-  if (!semana) return NextResponse.json({ error: 'Parámetro semana requerido' }, { status: 400 })
+  if (!semana) return NextResponse.json({ error: 'ParÃ¡metro semana requerido' }, { status: 400 })
 
   const dayStart = new Date(semana + 'T00:00:00')
   const dayEnd   = new Date(semana + 'T23:59:59')
@@ -32,31 +33,31 @@ export async function GET(req: Request) {
   const factorMO   = Number(config?.factorMO   ?? 0.6)
   const tarifaHora = Number(config?.tarifaHora ?? 300)
 
-  // ── Semana actual: filtro por fechaEntrada ────────────────────────────────
+  // â”€â”€ Semana actual: filtro por fechaEntrada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const otsRecibidas = allOTs.filter(
     (o) => o.fechaEntrada >= dayStart && o.fechaEntrada <= semFin
   )
 
-  // ── Cerradas esta semana: filtro por fechaEntrega ─────────────────────────
+  // â”€â”€ Cerradas esta semana: filtro por fechaEntrega â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const otsCerradas = allOTs.filter(
     (o) => o.estado === 'CERRADA' && o.fechaEntrega && o.fechaEntrega >= dayStart && o.fechaEntrega <= semFin
   )
 
-  // ── Comebacks recibidos esta semana ───────────────────────────────────────
+  // â”€â”€ Comebacks recibidos esta semana â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const comebacks = otsRecibidas.filter((o) => o.comeback).length
 
-  // ── A tiempo ─────────────────────────────────────────────────────────────
+  // â”€â”€ A tiempo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const otsATiempo = otsCerradas.filter((o) => o.aTiempo === true).length
 
-  // ── Ventas ────────────────────────────────────────────────────────────────
+  // â”€â”€ Ventas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const ventas = otsCerradas.reduce((s, o) => s + Number(o.precio), 0)
 
-  // ── Hrs Cerradas: HrsCalc por cada OT cerrada esta semana ────────────────
+  // â”€â”€ Hrs Cerradas: HrsCalc por cada OT cerrada esta semana â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const hrsCerradas = otsCerradas.reduce((s, o) => {
     return s + calcHrsCalc(Number(o.precio), factorMO, tarifaHora)
   }, 0)
 
-  // ── Hrs En Proceso: avances de esta semana con cap ───────────────────────
+  // â”€â”€ Hrs En Proceso: avances de esta semana con cap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const hrsEnProceso = avances.reduce((s, av) => {
     const ot = allOTs.find((o) => o.id === av.otId)
     if (!ot) return s
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
     return s + capped
   }, 0)
 
-  // ── Capacidad ─────────────────────────────────────────────────────────────
+  // â”€â”€ Capacidad â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let capacidad: number
   if (asistencias.length > 0) {
     capacidad = asistencias.reduce((s, a) => {
@@ -82,13 +83,13 @@ export async function GET(req: Request) {
     capacidad = tecnicos.length * CAPACIDAD_MAX
   }
 
-  // ── Métricas ──────────────────────────────────────────────────────────────
+  // â”€â”€ MÃ©tricas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const hrsProducidas = Math.round((hrsCerradas + hrsEnProceso) * 100) / 100
   const tasaComeback  = otsCerradas.length > 0 ? comebacks / otsCerradas.length : 0
   const tasaATiempo   = otsCerradas.length > 0 ? otsATiempo / otsCerradas.length : 0
   const eficiencia    = capacidad > 0 ? hrsProducidas / capacidad : 0
 
-  // ── Puntajes bono ─────────────────────────────────────────────────────────
+  // â”€â”€ Puntajes bono â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cfg = {
     eficienciaPiso:  Number(config?.eficienciaPiso  ?? 0.40),
     eficienciaTecho: Number(config?.eficienciaTecho ?? 0.75),
@@ -145,7 +146,7 @@ export async function GET(req: Request) {
     hrsProducidas: Math.round(hrsProducidas * 10) / 10,
     capacidad:     Math.round(capacidad * 10) / 10,
     eficiencia:    Math.round(eficiencia * 1000) / 10,    // %
-    // Evaluación manual
+    // EvaluaciÃ³n manual
     evaluacion: evaluacion ? {
       cabina: evaluacion.cabina, inventario: evaluacion.inventario, limpieza: evaluacion.limpieza, notas: evaluacion.notas,
     } : null,
@@ -169,3 +170,4 @@ export async function GET(req: Request) {
     },
   })
 }
+

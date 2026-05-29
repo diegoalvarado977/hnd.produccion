@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
     .filter((t) => t.tecnicoId && t.horas > 0)
 
   if (tecnicos.length === 0) {
-    return NextResponse.json({ error: 'Asigna al menos un técnico' }, { status: 400 })
+    return NextResponse.json({ error: 'Asigna al menos un tÃ©cnico' }, { status: 400 })
   }
 
   try {
@@ -51,8 +52,9 @@ export async function POST(req: Request) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Error desconocido'
     if (msg.includes('Unique constraint') && msg.includes('numero')) {
-      return NextResponse.json({ error: `El N° OT "${body.numero}" ya existe` }, { status: 409 })
+      return NextResponse.json({ error: `El NÂ° OT "${body.numero}" ya existe` }, { status: 409 })
     }
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
+

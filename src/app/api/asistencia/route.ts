@@ -1,3 +1,4 @@
+﻿export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { calcCapacidad, DIAS_DEFAULT } from '@/lib/calculos'
@@ -5,7 +6,7 @@ import { calcCapacidad, DIAS_DEFAULT } from '@/lib/calculos'
 // GET /api/asistencia?semana=2026-05-25
 export async function GET(req: Request) {
   const semana = new URL(req.url).searchParams.get('semana')
-  if (!semana) return NextResponse.json({ error: 'Parámetro semana requerido' }, { status: 400 })
+  if (!semana) return NextResponse.json({ error: 'ParÃ¡metro semana requerido' }, { status: 400 })
 
   const semanaInicio = new Date(semana + 'T12:00:00')
 
@@ -62,3 +63,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true })
 }
+

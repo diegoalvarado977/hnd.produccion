@@ -1,7 +1,8 @@
+﻿export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET — todos (activos e inactivos) para config; solo activos para forms
+// GET â€” todos (activos e inactivos) para config; solo activos para forms
 export async function GET(req: Request) {
   const todos = new URL(req.url).searchParams.get('todos') === '1'
   const tecnicos = await prisma.tecnico.findMany({
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
     })
     return NextResponse.json(tecnico, { status: 201 })
   } catch {
-    return NextResponse.json({ error: 'Ya existe un técnico con ese nombre' }, { status: 409 })
+    return NextResponse.json({ error: 'Ya existe un tÃ©cnico con ese nombre' }, { status: 409 })
   }
 }
+

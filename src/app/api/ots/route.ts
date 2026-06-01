@@ -33,9 +33,11 @@ export async function POST(req: Request) {
         precio:       parseFloat(body.precio),
         tipoCliente:  body.tipoCliente,
         comeback:     body.comeback ?? false,
-        fechaEntrada: new Date(body.fechaEntrada),
-        fechaPromesa: new Date(body.fechaPromesa),
-        notas:        body.notas || null,
+        fechaEntrada:      new Date(body.fechaEntrada),
+        fechaAutorizacion: body.fechaAutorizacion ? new Date(body.fechaAutorizacion) : null,
+        fechaFinalizacion: body.fechaFinalizacion ? new Date(body.fechaFinalizacion) : null,
+        fechaPromesa:      new Date(body.fechaPromesa),
+        notas:             body.notas || null,
         tecnicos: {
           create: tecnicos.map((t) => ({
             tecnicoId: t.tecnicoId,

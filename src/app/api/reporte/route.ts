@@ -38,9 +38,10 @@ export async function GET(req: Request) {
     (o) => o.fechaEntrada >= dayStart && o.fechaEntrada <= semFin
   )
 
-  // â”€â”€ Cerradas esta semana: filtro por fechaEntrega â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ Cerradas esta semana: filtro por fechaRecoleccion â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
   const otsCerradas = allOTs.filter(
-    (o) => o.estado === 'CERRADA' && o.fechaEntrega && o.fechaEntrega >= dayStart && o.fechaEntrega <= semFin
+    (o) => o.estado === 'CERRADA' && o.fechaRecoleccion && o.fechaRecoleccion >= dayStart && o.fechaRecoleccion <= semFin
   )
 
   // â”€â”€ Comebacks recibidos esta semana â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

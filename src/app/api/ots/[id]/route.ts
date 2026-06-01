@@ -24,13 +24,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const ot = await prisma.oT.findUnique({ where: { id: parseInt(id) } })
     if (!ot) return NextResponse.json({ error: 'No encontrada' }, { status: 404 })
 
-    const fechaEntrega = new Date(body.fechaEntrega)
+    const fechaRecoleccion = new Date(body.fechaRecoleccion)
     const updated = await prisma.oT.update({
       where: { id: parseInt(id) },
       data: {
         estado:       'CERRADA',
-        fechaEntrega,
-        aTiempo:      fechaEntrega <= ot.fechaPromesa,
+        fechaRecoleccion,
+        aTiempo:      fechaRecoleccion <= ot.fechaPromesa,
       },
     })
     return NextResponse.json(updated)
@@ -50,9 +50,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       precio:       parseFloat(body.precio),
       tipoCliente:  body.tipoCliente,
       comeback:     body.comeback ?? false,
-      fechaEntrada: new Date(body.fechaEntrada),
-      fechaPromesa: new Date(body.fechaPromesa),
-      notas:        body.notas || null,
+      fechaEntrada:      new Date(body.fechaEntrada),
+      fechaAutorizacion: body.fechaAutorizacion ? new Date(body.fechaAutorizacion) : null,
+      fechaFinalizacion: body.fechaFinalizacion ? new Date(body.fechaFinalizacion) : null,
+      fechaPromesa:      new Date(body.fechaPromesa),
+      notas:             body.notas || null,
       tecnicos: {
         create: tecnicos.map((t) => ({
           tecnicoId: t.tecnicoId,

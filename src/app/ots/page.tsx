@@ -68,7 +68,7 @@ export default async function OTsPage() {
               <th className="px-4 py-3 text-center">Estado</th>
               <th className="px-4 py-3 text-center">CB</th>
               <th className="px-4 py-3 text-left">Entrada</th>
-              <th className="px-4 py-3 text-left">Entrega</th>
+              <th className="px-4 py-3 text-left">Recolección</th>
               <th className="px-4 py-3 text-left">Promesa</th>
               <th className="px-4 py-3 text-left">Acciones</th>
             </tr>
@@ -112,7 +112,7 @@ export default async function OTsPage() {
                   <td className="px-4 py-3 font-medium whitespace-nowrap">
                     {cerrada && ot.aTiempo !== null ? (
                       <span className={`font-semibold ${ot.aTiempo ? 'text-green-700' : 'text-red-600'}`}>
-                        {fmt(ot.fechaEntrega)} {ot.aTiempo ? '✓' : '✗'}
+                        {fmt(ot.fechaRecoleccion)} {ot.aTiempo ? '✓' : '✗'}
                       </span>
                     ) : <span className="text-gray-400">—</span>}
                   </td>
@@ -124,16 +124,27 @@ export default async function OTsPage() {
                       </Link>
                       <DeleteOTButton otId={ot.id} numero={ot.numero} />
                       {!cerrada ? (
-                        <form action={cerrarOT} className="flex items-center gap-1">
+                        <form action={cerrarOT} className="flex items-center gap-1 flex-wrap">
                           <input type="hidden" name="otId" value={ot.id} />
-                          <input
-                            type="date"
-                            name="fechaEntrega"
-                            defaultValue={today}
-                            className="border border-gray-200 rounded px-2 py-1 text-xs w-32 text-gray-900"
-                          />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] text-gray-400 leading-none">Finalización</span>
+                            <input
+                              type="date"
+                              name="fechaFinalizacion"
+                              className="border border-gray-200 rounded px-2 py-1 text-xs w-32 text-gray-900"
+                            />
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] text-gray-400 leading-none">Recolección</span>
+                            <input
+                              type="date"
+                              name="fechaRecoleccion"
+                              defaultValue={today}
+                              className="border border-gray-200 rounded px-2 py-1 text-xs w-32 text-gray-900"
+                            />
+                          </div>
                           <button type="submit"
-                            className="text-xs px-2 py-1 bg-[#70AD47] text-white font-semibold rounded hover:bg-green-700">
+                            className="text-xs px-2 py-1 bg-[#70AD47] text-white font-semibold rounded hover:bg-green-700 self-end">
                             Cerrar
                           </button>
                         </form>

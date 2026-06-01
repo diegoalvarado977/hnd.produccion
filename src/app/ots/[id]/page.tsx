@@ -24,9 +24,11 @@ export default function EditarOTPage() {
   const [precio,       setPrecio]       = useState('')
   const [tipoCliente,  setTipoCliente]  = useState('PARTICULAR')
   const [comeback,     setComeback]     = useState(false)
-  const [fechaEntrada, setFechaEntrada] = useState('')
-  const [fechaPromesa, setFechaPromesa] = useState('')
-  const [notas,        setNotas]        = useState('')
+  const [fechaEntrada,      setFechaEntrada]      = useState('')
+  const [fechaAutorizacion, setFechaAutorizacion] = useState('')
+  const [fechaFinalizacion, setFechaFinalizacion] = useState('')
+  const [fechaPromesa,      setFechaPromesa]      = useState('')
+  const [notas,             setNotas]             = useState('')
   const [tecs, setTecs] = useState<TecRow[]>([
     { tecnicoId: 0, horas: 0 },
     { tecnicoId: 0, horas: 0 },
@@ -45,6 +47,8 @@ export default function EditarOTPage() {
       setTipoCliente(ot.tipoCliente)
       setComeback(ot.comeback)
       setFechaEntrada(ot.fechaEntrada.split('T')[0])
+      setFechaAutorizacion(ot.fechaAutorizacion ? ot.fechaAutorizacion.split('T')[0] : '')
+      setFechaFinalizacion(ot.fechaFinalizacion ? ot.fechaFinalizacion.split('T')[0] : '')
       setFechaPromesa(ot.fechaPromesa.split('T')[0])
       setNotas(ot.notas ?? '')
       const rows: TecRow[] = [
@@ -77,7 +81,14 @@ export default function EditarOTPage() {
       const res = await fetch(`/api/ots/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ numero, unidad, precio, tipoCliente, comeback, fechaEntrada, fechaPromesa, notas, tecnicos }),
+        body: JSON.stringify({
+        numero, unidad, precio, tipoCliente, comeback,
+        fechaEntrada,
+        fechaAutorizacion: fechaAutorizacion || null,
+        fechaFinalizacion: fechaFinalizacion || null,
+        fechaPromesa,
+        notas, tecnicos,
+      }),
       })
       if (!res.ok) { setError((await res.json()).error ?? 'Error'); return }
       router.push('/ots')
@@ -120,9 +131,15 @@ export default function EditarOTPage() {
             <div><label className={label}>Fecha de Entrada</label>
               <input className={input} type="date" value={fechaEntrada}
                 onChange={(e) => setFechaEntrada(e.target.value)} required /></div>
+            <div><label className={label}>Fecha de Autorización <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <input className={input} type="date" value={fechaAutorizacion}
+                onChange={(e) => setFechaAutorizacion(e.target.value)} /></div>
             <div><label className={label}>Fecha Promesa</label>
               <input className={input} type="date" value={fechaPromesa}
                 onChange={(e) => setFechaPromesa(e.target.value)} required /></div>
+            <div><label className={label}>Fecha de Finalización <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <input className={input} type="date" value={fechaFinalizacion}
+                onChange={(e) => setFechaFinalizacion(e.target.value)} /></div>
           </div>
           <div className="mt-4 flex items-center gap-2">
             <input type="checkbox" id="comeback" checked={comeback}

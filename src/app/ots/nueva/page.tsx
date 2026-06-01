@@ -21,9 +21,10 @@ export default function NuevaOTPage() {
   const [precio,       setPrecio]       = useState('')
   const [tipoCliente,  setTipoCliente]  = useState('PARTICULAR')
   const [comeback,     setComeback]     = useState(false)
-  const [fechaEntrada, setFechaEntrada] = useState('')
-  const [fechaPromesa, setFechaPromesa] = useState('')
-  const [notas,        setNotas]        = useState('')
+  const [fechaEntrada,      setFechaEntrada]      = useState('')
+  const [fechaAutorizacion, setFechaAutorizacion] = useState('')
+  const [fechaPromesa,      setFechaPromesa]      = useState('')
+  const [notas,             setNotas]             = useState('')
   const [tecs, setTecs] = useState<TecRow[]>([
     { tecnicoId: 0, horas: 0 },
     { tecnicoId: 0, horas: 0 },
@@ -66,7 +67,8 @@ export default function NuevaOTPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           numero, unidad, precio, tipoCliente, comeback,
-          fechaEntrada, fechaPromesa, notas, tecnicos,
+          fechaEntrada, fechaAutorizacion: fechaAutorizacion || null,
+          fechaPromesa, notas, tecnicos,
         }),
       })
       const data = await res.json()
@@ -120,6 +122,11 @@ export default function NuevaOTPage() {
               <label className={label}>Fecha de Entrada</label>
               <input className={input} type="date" value={fechaEntrada}
                 onChange={(e) => setFechaEntrada(e.target.value)} required />
+            </div>
+            <div>
+              <label className={label}>Fecha de Autorización <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <input className={input} type="date" value={fechaAutorizacion}
+                onChange={(e) => setFechaAutorizacion(e.target.value)} />
             </div>
             <div>
               <label className={label}>Fecha Promesa</label>

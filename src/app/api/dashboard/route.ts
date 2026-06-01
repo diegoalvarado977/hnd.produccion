@@ -33,9 +33,9 @@ export async function GET(req: Request) {
   const factorMO   = Number(config?.factorMO   ?? 0.6)
   const tarifaHora = Number(config?.tarifaHora ?? 300)
 
-  // OTs cerradas esta semana (por fechaEntrega)
+  // OTs cerradas esta semana (por fechaRecoleccion)
   const otsCerradasSemana = allOTs.filter(
-    (o) => o.estado === 'CERRADA' && o.fechaEntrega && o.fechaEntrega >= dayStart && o.fechaEntrega <= semFin
+    (o) => o.estado === 'CERRADA' && o.fechaRecoleccion && o.fechaRecoleccion >= dayStart && o.fechaRecoleccion <= semFin
   )
 
   // OTs recibidas esta semana (por fechaEntrada)

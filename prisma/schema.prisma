@@ -43,10 +43,12 @@ model OT {
   tipoCliente  TipoCliente
   estado       EstadoOT        @default(EN_PROCESO)
   comeback     Boolean         @default(false)
-  fechaEntrada DateTime
-  fechaPromesa DateTime
-  fechaEntrega DateTime?
-  aTiempo      Boolean?
+  fechaEntrada      DateTime
+  fechaAutorizacion DateTime?
+  fechaFinalizacion DateTime?
+  fechaPromesa      DateTime
+  fechaRecoleccion  DateTime?
+  aTiempo           Boolean?
   notas        String?
   tecnicos     OTTecnico[]
   avances      AvanceSemanal[]

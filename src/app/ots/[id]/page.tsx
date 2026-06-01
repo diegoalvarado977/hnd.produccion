@@ -28,6 +28,7 @@ export default function EditarOTPage() {
   const [fechaAutorizacion, setFechaAutorizacion] = useState('')
   const [fechaFinalizacion, setFechaFinalizacion] = useState('')
   const [fechaPromesa,      setFechaPromesa]      = useState('')
+  const [fechaRecoleccion,  setFechaRecoleccion]  = useState('')
   const [notas,             setNotas]             = useState('')
   const [tecs, setTecs] = useState<TecRow[]>([
     { tecnicoId: 0, horas: 0 },
@@ -50,6 +51,7 @@ export default function EditarOTPage() {
       setFechaAutorizacion(ot.fechaAutorizacion ? ot.fechaAutorizacion.split('T')[0] : '')
       setFechaFinalizacion(ot.fechaFinalizacion ? ot.fechaFinalizacion.split('T')[0] : '')
       setFechaPromesa(ot.fechaPromesa.split('T')[0])
+      setFechaRecoleccion(ot.fechaRecoleccion ? ot.fechaRecoleccion.split('T')[0] : '')
       setNotas(ot.notas ?? '')
       const rows: TecRow[] = [
         { tecnicoId: 0, horas: 0 },
@@ -87,6 +89,7 @@ export default function EditarOTPage() {
         fechaAutorizacion: fechaAutorizacion || null,
         fechaFinalizacion: fechaFinalizacion || null,
         fechaPromesa,
+        fechaRecoleccion: fechaRecoleccion || null,
         notas, tecnicos,
       }),
       })
@@ -140,6 +143,9 @@ export default function EditarOTPage() {
             <div><label className={label}>Fecha de Finalización <span className="text-gray-400 font-normal">(opcional)</span></label>
               <input className={input} type="date" value={fechaFinalizacion}
                 onChange={(e) => setFechaFinalizacion(e.target.value)} /></div>
+            <div><label className={label}>Fecha de Recolección <span className="text-gray-400 font-normal">(opcional)</span></label>
+              <input className={input} type="date" value={fechaRecoleccion}
+                onChange={(e) => setFechaRecoleccion(e.target.value)} /></div>
           </div>
           <div className="mt-4 flex items-center gap-2">
             <input type="checkbox" id="comeback" checked={comeback}

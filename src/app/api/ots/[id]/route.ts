@@ -54,6 +54,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       fechaAutorizacion: body.fechaAutorizacion ? new Date(body.fechaAutorizacion) : null,
       fechaFinalizacion: body.fechaFinalizacion ? new Date(body.fechaFinalizacion) : null,
       fechaPromesa:      new Date(body.fechaPromesa),
+      fechaRecoleccion:  body.fechaRecoleccion  ? new Date(body.fechaRecoleccion)  : null,
       notas:             body.notas || null,
       tecnicos: {
         create: tecnicos.map((t) => ({

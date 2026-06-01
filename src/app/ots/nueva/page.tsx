@@ -35,13 +35,20 @@ export default function NuevaOTPage() {
     fetch('/api/tecnicos').then((r) => r.json()).then(setTecnicos)
   }, [])
 
-  // Auto-calcular fecha promesa: entrada + 3 días hábiles
+  // Auto-calcular fecha promesa según tipo de cliente y precio
   useEffect(() => {
     if (!fechaEntrada) return
+    const p = parseFloat(precio) || 0
+    let dias = 3
+    if (tipoCliente === 'FLOTILLA') {
+      if (p < 5000)       dias = 5
+      else if (p < 10000) dias = 8
+      else                dias = 14
+    }
     const d = new Date(fechaEntrada + 'T12:00:00')
-    d.setDate(d.getDate() + 3)
+    d.setDate(d.getDate() + dias)
     setFechaPromesa(d.toISOString().split('T')[0])
-  }, [fechaEntrada])
+  }, [fechaEntrada, tipoCliente, precio])
 
   function updateTec(i: number, field: keyof TecRow, val: number) {
     setTecs((prev) => prev.map((t, idx) => idx === i ? { ...t, [field]: val } : t))
@@ -132,6 +139,17 @@ export default function NuevaOTPage() {
               <label className={label}>Fecha Promesa</label>
               <input className={input} type="date" value={fechaPromesa}
                 onChange={(e) => setFechaPromesa(e.target.value)} required />
+              {fechaEntrada && (
+                <p className="text-[11px] text-gray-400 mt-1">
+                  {tipoCliente === 'FLOTILLA'
+                    ? (parseFloat(precio) || 0) < 5000
+                      ? 'Auto: +5 días · Flotilla < $5,000'
+                      : (parseFloat(precio) || 0) < 10000
+                        ? 'Auto: +8 días · Flotilla $5,000–$10,000'
+                        : 'Auto: +14 días · Flotilla > $10,000'
+                    : 'Auto: +3 días · Particular'}
+                </p>
+              )}
             </div>
           </div>
           <div className="mt-4 flex items-center gap-2">

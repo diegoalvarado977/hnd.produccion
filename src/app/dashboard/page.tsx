@@ -85,18 +85,19 @@ export default function DashboardPage() {
 
       {/* Tabla */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="bg-[#1F497D] text-white text-xs uppercase tracking-wide">
               <th className="px-4 py-3 text-left">Técnico</th>
-              <th className="px-4 py-3 text-center">OTs Asig.</th>
-              <th className="px-4 py-3 text-center">OTs Cerr.</th>
-              <th className="px-4 py-3 text-center">CB</th>
-              <th className="px-4 py-3 text-center">Hrs Cerradas</th>
-              <th className="px-4 py-3 text-center">Hrs Proceso</th>
+              <th className="px-4 py-3 text-center hidden sm:table-cell">OTs Asig.</th>
+              <th className="px-4 py-3 text-center hidden sm:table-cell">OTs Cerr.</th>
+              <th className="px-4 py-3 text-center hidden sm:table-cell">CB</th>
+              <th className="px-4 py-3 text-center hidden md:table-cell">Hrs Cerradas</th>
+              <th className="px-4 py-3 text-center hidden md:table-cell">Hrs Proceso</th>
               <th className="px-4 py-3 text-center">Hrs Prod.</th>
-              <th className="px-4 py-3 text-center">Asistencia</th>
-              <th className="px-4 py-3 text-center">Cap.</th>
+              <th className="px-4 py-3 text-center hidden sm:table-cell">Asistencia</th>
+              <th className="px-4 py-3 text-center hidden sm:table-cell">Cap.</th>
               <th className="px-4 py-3 text-center">Eficiencia</th>
             </tr>
           </thead>
@@ -113,19 +114,19 @@ export default function DashboardPage() {
             {!loading && rows.map((r) => (
               <tr key={r.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-semibold text-gray-900">{r.nombre}</td>
-                <td className="px-4 py-3 text-center font-medium text-gray-800">{r.otsAsignadas}</td>
-                <td className="px-4 py-3 text-center font-medium text-gray-800">{r.otsCerradas}</td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-3 text-center font-medium text-gray-800 hidden sm:table-cell">{r.otsAsignadas}</td>
+                <td className="px-4 py-3 text-center font-medium text-gray-800 hidden sm:table-cell">{r.otsCerradas}</td>
+                <td className="px-4 py-3 text-center hidden sm:table-cell">
                   {r.comebacks > 0
                     ? <span className="bg-red-100 text-red-700 font-bold text-xs px-2 py-0.5 rounded-full">{r.comebacks}</span>
                     : <span className="text-gray-300 text-xs">—</span>}
                 </td>
-                <td className="px-4 py-3 text-center font-medium text-gray-800">{r.hrsCerradas}</td>
-                <td className="px-4 py-3 text-center font-medium text-[#4472C4]">
+                <td className="px-4 py-3 text-center font-medium text-gray-800 hidden md:table-cell">{r.hrsCerradas}</td>
+                <td className="px-4 py-3 text-center font-medium text-[#4472C4] hidden md:table-cell">
                   {r.hrsEnProceso > 0 ? r.hrsEnProceso : <span className="text-gray-300">—</span>}
                 </td>
                 <td className="px-4 py-3 text-center font-bold text-gray-900">{r.hrsProducidas}</td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-3 text-center hidden sm:table-cell">
                   <div className="flex justify-center gap-0.5">
                     {r.diasAsist.map((presente, i) => (
                       <span key={i} title={['L','M','Mi','J','V','S'][i]}
@@ -139,12 +140,13 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-center font-medium text-gray-800">{r.capacidad} h</td>
+                <td className="px-4 py-3 text-center font-medium text-gray-800 hidden sm:table-cell">{r.capacidad} h</td>
                 <td className="px-4 py-3 text-center"><EficienciaBadge val={r.eficiencia} /></td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
 
         {!loading && rows.length > 0 && (
           <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 grid grid-cols-10 text-xs font-semibold text-gray-600 uppercase tracking-wide">

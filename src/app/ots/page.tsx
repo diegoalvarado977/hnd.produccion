@@ -44,32 +44,20 @@ export default async function OTsPage() {
 
       {/* Tabla */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <colgroup>
-            <col className="w-28" />   {/* N° OT */}
-            <col className="w-48" />   {/* Unidad */}
-            <col className="w-44" />   {/* Técnicos */}
-            <col className="w-28" />   {/* Precio */}
-            <col className="w-24" />   {/* Cliente */}
-            <col className="w-24" />   {/* Estado */}
-            <col className="w-10" />   {/* CB */}
-            <col className="w-24" />   {/* Entrada */}
-            <col className="w-28" />   {/* Entrega */}
-            <col className="w-24" />   {/* Promesa */}
-            <col />                    {/* Acciones */}
-          </colgroup>
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[800px]">
           <thead>
             <tr className="bg-[#1F497D] text-white text-xs uppercase tracking-wide">
               <th className="px-4 py-3 text-left">N° OT</th>
               <th className="px-4 py-3 text-left">Unidad</th>
-              <th className="px-4 py-3 text-left">Técnicos</th>
-              <th className="px-4 py-3 text-right">Precio</th>
-              <th className="px-4 py-3 text-center">Cliente</th>
+              <th className="px-4 py-3 text-left hidden sm:table-cell">Técnicos</th>
+              <th className="px-4 py-3 text-right hidden md:table-cell">Precio</th>
+              <th className="px-4 py-3 text-center hidden md:table-cell">Cliente</th>
               <th className="px-4 py-3 text-center">Estado</th>
-              <th className="px-4 py-3 text-center">CB</th>
-              <th className="px-4 py-3 text-left">Entrada</th>
-              <th className="px-4 py-3 text-left">Recolección</th>
-              <th className="px-4 py-3 text-left">Promesa</th>
+              <th className="px-4 py-3 text-center hidden sm:table-cell">CB</th>
+              <th className="px-4 py-3 text-left hidden md:table-cell">Entrada</th>
+              <th className="px-4 py-3 text-left hidden md:table-cell">Recolección</th>
+              <th className="px-4 py-3 text-left hidden md:table-cell">Promesa</th>
               <th className="px-4 py-3 text-left">Acciones</th>
             </tr>
           </thead>
@@ -91,9 +79,9 @@ export default async function OTsPage() {
                 <tr key={ot.id} className={`hover:bg-gray-50 ${cerrada ? 'bg-gray-50/60' : ''}`}>
                   <td className="px-4 py-3 font-mono font-bold text-[#1F497D] whitespace-nowrap">{ot.numero}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{ot.unidad}</td>
-                  <td className="px-4 py-3 text-gray-800 text-xs font-medium">{tecNames}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap">{fmtPeso(ot.precio)}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-gray-800 text-xs font-medium hidden sm:table-cell">{tecNames}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-gray-900 whitespace-nowrap hidden md:table-cell">{fmtPeso(ot.precio)}</td>
+                  <td className="px-4 py-3 text-center hidden md:table-cell">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${ot.tipoCliente === 'PARTICULAR' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
                       {ot.tipoCliente === 'PARTICULAR' ? 'Particular' : 'Flotilla'}
                     </span>
@@ -103,20 +91,20 @@ export default async function OTsPage() {
                       {cerrada ? 'Cerrada' : 'En Proceso'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center hidden sm:table-cell">
                     {ot.comeback
                       ? <span className="bg-red-100 text-red-700 font-bold text-xs px-2 py-0.5 rounded-full">CB</span>
                       : <span className="text-gray-300 text-xs">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap">{fmt(ot.fechaEntrada)}</td>
-                  <td className="px-4 py-3 font-medium whitespace-nowrap">
+                  <td className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap hidden md:table-cell">{fmt(ot.fechaEntrada)}</td>
+                  <td className="px-4 py-3 font-medium whitespace-nowrap hidden md:table-cell">
                     {cerrada && ot.aTiempo !== null ? (
                       <span className={`font-semibold ${ot.aTiempo ? 'text-green-700' : 'text-red-600'}`}>
                         {fmt(ot.fechaRecoleccion)} {ot.aTiempo ? '✓' : '✗'}
                       </span>
                     ) : <span className="text-gray-400">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap">{fmt(ot.fechaPromesa)}</td>
+                  <td className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap hidden md:table-cell">{fmt(ot.fechaPromesa)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <Link href={`/ots/${ot.id}`} className="text-xs font-medium text-gray-500 hover:text-[#4472C4]">
@@ -163,6 +151,7 @@ export default async function OTsPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

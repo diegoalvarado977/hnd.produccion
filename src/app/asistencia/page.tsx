@@ -129,7 +129,8 @@ export default function AsistenciaPage() {
         </div>
 
         {/* Encabezado de días */}
-        <div className="grid border-b border-gray-100" style={{ gridTemplateColumns: '1fr repeat(6,52px) 80px' }}>
+        <div className="overflow-x-auto">
+        <div className="grid border-b border-gray-100 min-w-[480px]" style={{ gridTemplateColumns: '1fr repeat(6,52px) 80px' }}>
           <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Técnico</div>
           {DIAS_SEMANA.map(({ key, label, hrs }) => (
             <div key={key} className="py-2 text-center">
@@ -148,7 +149,7 @@ export default function AsistenciaPage() {
               const ausente = Object.values(row.dias).some((v) => !v)
               return (
                 <div key={row.tecnicoId}
-                  className={`grid items-center hover:bg-gray-50 ${ausente ? 'bg-amber-50/40' : ''}`}
+                  className={`grid items-center hover:bg-gray-50 min-w-[480px] ${ausente ? 'bg-amber-50/40' : ''}`}
                   style={{ gridTemplateColumns: '1fr repeat(6,52px) 80px' }}>
 
                   <div className="px-4 py-3 font-semibold text-sm text-gray-900">{row.nombre}</div>
@@ -180,10 +181,12 @@ export default function AsistenciaPage() {
               )
             })}
           </div>
+        </div>
+        </div>
         )}
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-3">
           <div className="text-sm text-gray-600">
             Capacidad total del equipo:{' '}
             <span className="font-bold text-gray-800">{capacidadTotal.toFixed(1)} hrs</span>

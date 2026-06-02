@@ -103,7 +103,7 @@ export default function AvancePage() {
 
       {/* Tabla */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 bg-[#4472C4] text-white flex items-center justify-between">
+        <div className="px-4 py-3 bg-[#4472C4] text-white flex items-center justify-between gap-2">
           <p className="text-sm font-semibold">OTs en Proceso</p>
           {ots.some((o) => o.registrado) && (
             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Semana ya registrada</span>
@@ -118,7 +118,8 @@ export default function AvancePage() {
             <p className="text-xs mt-1 text-gray-400">Todas las OTs están cerradas o no hay OTs registradas</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wide">
                 <th className="px-4 py-3 text-left">N° OT</th>
@@ -180,9 +181,10 @@ export default function AvancePage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
 
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-3">
           <div className="text-sm text-gray-700">
             Total avance esta semana:{' '}
             <span className="font-bold text-gray-900">{totalAvance.toFixed(1)} hrs</span>

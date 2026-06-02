@@ -102,7 +102,7 @@ export default function NuevaOTPage() {
         {/* Datos generales */}
         <section>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Datos Generales</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={label}>N° OT</label>
               <input className={input} placeholder="VH-2250" value={numero}

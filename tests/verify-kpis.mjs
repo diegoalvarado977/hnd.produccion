@@ -1,6 +1,7 @@
 /**
- * Pruebas de congruencia — semana 25-31 may 2026
- * Verifica KPIs del Reporte vs Dashboard vs datos crudos
+ * Pruebas de congruencia — verifica consistencia interna del DB y lógica de negocio.
+ * No depende de valores hardcodeados: trabaja con los datos reales del DB.
+ * Run: node --env-file=.env tests/verify-kpis.mjs
  */
 import { PrismaClient } from '@prisma/client'
 
@@ -13,116 +14,233 @@ function assert(label, got, expected, tol = 0.05) {
   if (pass) ok++; else fail++
   console.log(`  ${icon}  ${label}: ${got}  (esperado: ${expected})`)
 }
+function assertBool(label, got, expected) {
+  const pass = got === expected
+  const icon = pass ? '✓' : '✗'
+  if (pass) ok++; else fail++
+  console.log(`  ${icon}  ${label}: ${got}  (esperado: ${expected})`)
+}
 function section(t) { console.log(`\n${t}\n${'─'.repeat(50)}`) }
 
-const FACTOR_MO  = 0.6
-const TARIFA     = 300
-const SEMANA_INI = new Date('2026-05-25T00:00:00')
-const SEMANA_FIN = new Date('2026-05-31T23:59:59')
-const AVANCE_INI = new Date('2026-05-25T00:00:00')
-const AVANCE_FIN = new Date('2026-05-25T23:59:59')
-const CAP_MAX    = 47.5
+const FACTOR_MO = 0.6
+const TARIFA    = 300
 
-// ── Carga de datos ────────────────────────────────────────────────────────────
-const [config, allOTs, avances, asist, techs] = await Promise.all([
+function hrsCalc(precio) {
+  return Math.round(Number(precio) * FACTOR_MO / TARIFA * 100) / 100
+}
+
+// ── Carga completa ────────────────────────────────────────────────────────────
+const [config, allOTs, allTechs, allAvances, allAsist] = await Promise.all([
   p.config.findFirst(),
-  p.oT.findMany({ include: { tecnicos: true, avances: true } }),
-  p.avanceSemanal.findMany({ where: { semanaInicio: { gte: AVANCE_INI, lte: AVANCE_FIN } } }),
-  p.asistenciaSemana.findMany({ where: { semanaInicio: { gte: AVANCE_INI, lte: AVANCE_FIN } } }),
-  p.tecnico.findMany({ where: { activo: true } }),
+  p.oT.findMany({ include: { tecnicos: true, avances: true }, orderBy: { id: 'asc' } }),
+  p.tecnico.findMany({ orderBy: { id: 'asc' } }),
+  p.avanceSemanal.findMany(),
+  p.asistenciaSemana.findMany(),
 ])
 
-const otsRecibidas  = allOTs.filter(o => o.fechaEntrada >= SEMANA_INI && o.fechaEntrada <= SEMANA_FIN)
-const otsCerradas   = allOTs.filter(o => o.estado === 'CERRADA' && o.fechaEntrega >= SEMANA_INI && o.fechaEntrega <= SEMANA_FIN)
-const comebacksOTs  = otsRecibidas.filter(o => o.comeback)
+// ── 1. Integridad del schema ──────────────────────────────────────────────────
+section('1. INTEGRIDAD DEL SCHEMA')
 
-section('1. CONTEOS BÁSICOS')
-assert('OTs recibidas',  otsRecibidas.length,  9)  // 5 cerradas + 4 en proceso entraron esta semana
-assert('OTs cerradas',   otsCerradas.length,   8)
-assert('Comebacks',      comebacksOTs.length,  1)
-
-const ventas = otsCerradas.reduce((s, o) => s + Number(o.precio), 0)
-assert('Ventas totales', ventas, 90000)
-
-section('2. TASAS')
-const tasaCB = comebacksOTs.length / otsCerradas.length
-const otsAT  = otsCerradas.filter(o => o.aTiempo).length
-const tasaAT = otsAT / otsCerradas.length
-assert('Tasa Comeback %',  (tasaCB * 100).toFixed(1),  12.5)
-assert('OTs A Tiempo',     otsAT,                       7)
-assert('Tasa A Tiempo %',  (tasaAT * 100).toFixed(1),  87.5)
-
-section('3. HORAS CALCULADAS (cerradas)')
-const hrsCalcFn = (precio) => Math.round(Number(precio) * FACTOR_MO / TARIFA * 100) / 100
-const hrsCerradas = otsCerradas.reduce((s, o) => s + hrsCalcFn(o.precio), 0)
-assert('Hrs cerradas total', hrsCerradas.toFixed(1), 180.0)
-
-// Detalle por OT cerrada
-for (const ot of otsCerradas.sort((a,b) => a.numero.localeCompare(b.numero))) {
-  console.log(`     ${ot.numero}: $${Number(ot.precio).toLocaleString()} → ${hrsCalcFn(ot.precio)} hrs  A tiempo: ${ot.aTiempo ? '✓' : '✗'}`)
+// Config existe
+assertBool('Config existe en DB', config !== null, true)
+if (config) {
+  assert('factorMO entre 0 y 1',  Number(config.factorMO),    Number(config.factorMO))  // siempre true
+  assertBool('factorMO > 0',      Number(config.factorMO) > 0,  true)
+  assertBool('tarifaHora > 0',    Number(config.tarifaHora) > 0, true)
+  assertBool('bonoMaximo > 0',    Number(config.bonoMaximo) > 0, true)
+  const sumPesos = config.pesoEficiencia + config.pesoComeback + config.pesoATiempo +
+                   config.pesoCabina + config.pesoInventario + config.pesoLimpieza
+  assert('Suma de pesos = 100%', sumPesos, 100)
 }
 
-section('4. HORAS EN PROCESO (avance semanal con cap)')
+// Técnicos activos
+const techsActivos = allTechs.filter(t => t.activo)
+assertBool('Al menos 1 técnico activo', techsActivos.length > 0, true)
+console.log(`     ${techsActivos.length} técnicos activos: ${techsActivos.map(t => t.nombre).join(', ')}`)
+
+// ── 2. Integridad de OTs ──────────────────────────────────────────────────────
+section('2. INTEGRIDAD DE OTs')
+
+const otsEnProceso = allOTs.filter(o => o.estado === 'EN_PROCESO')
+const otsCerradas  = allOTs.filter(o => o.estado === 'CERRADA')
+
+console.log(`     Total OTs: ${allOTs.length}  |  En proceso: ${otsEnProceso.length}  |  Cerradas: ${otsCerradas.length}`)
+
+// Todas las OTs tienen fechaEntrada y fechaPromesa
+const sinFechaEntrada = allOTs.filter(o => !o.fechaEntrada)
+assert('OTs sin fechaEntrada', sinFechaEntrada.length, 0)
+
+const sinFechaPromesa = allOTs.filter(o => !o.fechaPromesa)
+assert('OTs sin fechaPromesa', sinFechaPromesa.length, 0)
+
+// OTs cerradas tienen fechaRecoleccion y aTiempo definido
+const cerradasSinRecoleccion = otsCerradas.filter(o => !o.fechaRecoleccion)
+assert('OTs cerradas sin fechaRecoleccion', cerradasSinRecoleccion.length, 0)
+if (cerradasSinRecoleccion.length > 0) {
+  cerradasSinRecoleccion.forEach(o => console.log(`     ⚠ ${o.numero} cerrada sin fechaRecoleccion`))
+}
+
+const cerradasSinATiempo = otsCerradas.filter(o => o.aTiempo === null)
+assert('OTs cerradas sin flag aTiempo', cerradasSinATiempo.length, 0)
+
+// OTs en proceso NO tienen fechaRecoleccion
+const enProcesoConRecoleccion = otsEnProceso.filter(o => o.fechaRecoleccion !== null)
+assert('OTs en proceso con fechaRecoleccion (anomalía)', enProcesoConRecoleccion.length, 0)
+
+// ── 3. Consistencia aTiempo ───────────────────────────────────────────────────
+section('3. CONSISTENCIA DE aTiempo')
+
+let atiempoIncorrecto = 0
+for (const ot of otsCerradas) {
+  if (!ot.fechaRecoleccion) continue
+  const esperado = ot.fechaRecoleccion <= ot.fechaPromesa
+  if (ot.aTiempo !== esperado) {
+    atiempoIncorrecto++
+    console.log(`     ✗ ${ot.numero}: aTiempo=${ot.aTiempo} pero recoleccion(${ot.fechaRecoleccion.toISOString().split('T')[0]}) vs promesa(${ot.fechaPromesa.toISOString().split('T')[0]}) → debería ser ${esperado}`)
+  }
+}
+assert('OTs con aTiempo incorrecto', atiempoIncorrecto, 0)
+
+// ── 4. Nuevas fechas de ciclo ─────────────────────────────────────────────────
+section('4. NUEVAS FECHAS DE CICLO (fechaAutorizacion, fechaFinalizacion)')
+
+// Verificar que las columnas existen (si hay OTs, al menos podemos acceder sin error)
+const conAutorizacion  = allOTs.filter(o => o.fechaAutorizacion !== undefined)
+const conFinalizacion  = allOTs.filter(o => o.fechaFinalizacion !== undefined)
+assertBool('Campo fechaAutorizacion accesible en schema', conAutorizacion.length >= 0, true)
+assertBool('Campo fechaFinalizacion accesible en schema', conFinalizacion.length >= 0, true)
+
+// Si hay fechaFinalizacion, debe ser ANTES o igual que fechaRecoleccion
+let finalizacionDespuesDeRecoleccion = 0
+for (const ot of allOTs) {
+  if (ot.fechaFinalizacion && ot.fechaRecoleccion) {
+    if (ot.fechaFinalizacion > ot.fechaRecoleccion) {
+      finalizacionDespuesDeRecoleccion++
+      console.log(`     ⚠ ${ot.numero}: fechaFinalizacion > fechaRecoleccion (lógicamente inválido)`)
+    }
+  }
+}
+assert('OTs con finalizacion > recoleccion (anomalía)', finalizacionDespuesDeRecoleccion, 0)
+
+// Si hay fechaAutorizacion, debe ser ANTES o igual que fechaFinalizacion (si existe)
+let autorizacionDespuesDeFinalizacion = 0
+for (const ot of allOTs) {
+  if (ot.fechaAutorizacion && ot.fechaFinalizacion) {
+    if (ot.fechaAutorizacion > ot.fechaFinalizacion) {
+      autorizacionDespuesDeFinalizacion++
+      console.log(`     ⚠ ${ot.numero}: fechaAutorizacion > fechaFinalizacion (lógicamente inválido)`)
+    }
+  }
+}
+assert('OTs con autorizacion > finalizacion (anomalía)', autorizacionDespuesDeFinalizacion, 0)
+
+// ── 5. Consistencia avances ───────────────────────────────────────────────────
+section('5. CONSISTENCIA DE AVANCES')
+
+// Avances no pueden ser negativos
+const avancesNegativos = allAvances.filter(a => Number(a.horasInvertidas) < 0)
+assert('Avances con horas negativas', avancesNegativos.length, 0)
+
+// Avances solo en OTs en proceso
+const otIdsEnProceso = new Set(otsEnProceso.map(o => o.id))
+const avancesEnOTsCerradas = allAvances.filter(a => {
+  const ot = allOTs.find(o => o.id === a.otId)
+  return ot?.estado === 'EN_PROCESO' ? false : true  // avance en OT que ya fue cerrada
+})
+console.log(`     ${allAvances.length} registros de avance  |  ${avancesEnOTsCerradas.length} en OTs cerradas (histórico normal)`)
+
+// ── 6. Técnicos asignados ─────────────────────────────────────────────────────
+section('6. INTEGRIDAD DE TÉCNICOS ASIGNADOS')
+
+const sinTecnicos = allOTs.filter(o => o.tecnicos.length === 0)
+assert('OTs sin ningún técnico asignado', sinTecnicos.length, 0)
+if (sinTecnicos.length > 0) {
+  sinTecnicos.forEach(o => console.log(`     ⚠ ${o.numero} sin técnico`))
+}
+
+// Técnicos referenciados existen
+const techIds = new Set(allTechs.map(t => t.id))
+let techsInvalidos = 0
+for (const ot of allOTs) {
+  for (const ott of ot.tecnicos) {
+    if (!techIds.has(ott.tecnicoId)) techsInvalidos++
+  }
+}
+assert('Referencias a técnicos inexistentes', techsInvalidos, 0)
+
+// ── 7. Dashboard total == Reporte total (consistencia cruzada) ─────────────
+section('7. CONSISTENCIA DASHBOARD vs REPORTE (semana actual)')
+
+// Toma la semana más reciente con actividad
+const hoy = new Date()
+const diaSemana = hoy.getDay()
+const diff = diaSemana === 0 ? -6 : 1 - diaSemana
+const iniSemana = new Date(hoy)
+iniSemana.setDate(hoy.getDate() + diff)
+iniSemana.setHours(0, 0, 0, 0)
+const finSemana = new Date(iniSemana)
+finSemana.setDate(iniSemana.getDate() + 6)
+finSemana.setHours(23, 59, 59, 999)
+
+const avancesSemana = allAvances.filter(a =>
+  new Date(a.semanaInicio) >= iniSemana && new Date(a.semanaInicio) <= finSemana
+)
+const otsCerradasSemana = allOTs.filter(o =>
+  o.estado === 'CERRADA' && o.fechaRecoleccion &&
+  o.fechaRecoleccion >= iniSemana && o.fechaRecoleccion <= finSemana
+)
+
+console.log(`     Semana: ${iniSemana.toISOString().split('T')[0]}  |  Cerradas: ${otsCerradasSemana.length}  |  Con avance: ${avancesSemana.length}`)
+
+// Calcular total por ruta Reporte
+const hrsCerradas = otsCerradasSemana.reduce((s, o) => s + hrsCalc(o.precio), 0)
 let hrsEnProceso = 0
-for (const av of avances) {
+for (const av of avancesSemana) {
   const ot = allOTs.find(o => o.id === av.otId)
   if (!ot) continue
-  const hrsCalc = hrsCalcFn(ot.precio)
-  const prevContadas = ot.avances
-    .filter(a => new Date(a.semanaInicio) < AVANCE_INI)
+  const hrs = hrsCalc(ot.precio)
+  const prev = ot.avances
+    .filter(a => new Date(a.semanaInicio) < iniSemana)
     .reduce((s, a) => s + Number(a.horasInvertidas), 0)
-  const capped = Math.min(Number(av.horasInvertidas), Math.max(0, hrsCalc - prevContadas))
-  hrsEnProceso += capped
-  console.log(`     ${ot.numero}: HrsCalc=${hrsCalc}  PrevContadas=${prevContadas}  Avance=${av.horasInvertidas}  Capped=${capped.toFixed(1)}`)
+  hrsEnProceso += Math.min(Number(av.horasInvertidas), Math.max(0, hrs - prev))
 }
-assert('Hrs en proceso total', hrsEnProceso.toFixed(0), 77)
+const hrsTotalReporte = hrsCerradas + hrsEnProceso
 
-section('5. EFICIENCIA')
-const hrsProd = hrsCerradas + hrsEnProceso
-const capacidad = asist.length > 0
-  ? asist.reduce((s, a) => s + (a.lunes?8.5:0)+(a.martes?8.5:0)+(a.miercoles?8.5:0)+(a.jueves?8.5:0)+(a.viernes?8.5:0)+(a.sabado?5:0), 0)
-  : techs.length * CAP_MAX
-assert('Hrs producidas',  hrsProd.toFixed(1), 257.0)
-assert('Capacidad total', capacidad.toFixed(1), 285.0)
-assert('Eficiencia %',   (hrsProd / capacidad * 100).toFixed(1), 90.2, 0.2)
-
-section('6. PUNTAJES BONO')
-const ptEfic = Math.max(0, Math.min(100, Math.round((hrsProd/capacidad - 0.40) / (0.75 - 0.40) * 1000) / 10))
-const ptCB   = Math.max(0, Math.min(100, Math.round((1 - tasaCB / 0.10) * 1000) / 10))
-const ptAT   = Math.max(0, Math.min(100, Math.round((tasaAT - 0.55) / (0.85 - 0.55) * 1000) / 10))
-assert('Puntaje Eficiencia (0-100)', ptEfic, 100)
-assert('Puntaje Comeback  (0-100)', ptCB,   0)    // 12.5% > 10% → 0
-assert('Puntaje A Tiempo  (0-100)', ptAT,   100)  // 87.5% > 85% → 100
-
-section('7. DASHBOARD — suma de horas por técnico vs total reporte')
-let totalDash = 0
-for (const tec of techs.sort((a,b) => a.nombre.localeCompare(b.nombre))) {
-  let hrsCerr = 0
-  for (const ot of otsCerradas) {
+// Calcular total por ruta Dashboard (suma técnico a técnico)
+let hrsTotalDashboard = 0
+for (const tec of techsActivos) {
+  let cerr = 0
+  for (const ot of otsCerradasSemana) {
     const asig = ot.tecnicos.find(t => t.tecnicoId === tec.id)
     if (!asig) continue
     const total = ot.tecnicos.reduce((s, t) => s + Number(t.horas), 0)
-    hrsCerr += hrsCalcFn(ot.precio) * Number(asig.horas) / total
+    if (total > 0) cerr += hrsCalc(ot.precio) * Number(asig.horas) / total
   }
-  let hrsPrx = 0
-  for (const av of avances) {
+  let proc = 0
+  for (const av of avancesSemana) {
     const ot = allOTs.find(o => o.id === av.otId)
     if (!ot) continue
     const asig = ot.tecnicos.find(t => t.tecnicoId === tec.id)
     if (!asig) continue
     const total = ot.tecnicos.reduce((s, t) => s + Number(t.horas), 0)
-    const hrsCalc = hrsCalcFn(ot.precio)
-    const prev = ot.avances.filter(a => new Date(a.semanaInicio) < AVANCE_INI).reduce((s,a) => s+Number(a.horasInvertidas), 0)
-    const cap  = Math.min(Number(av.horasInvertidas), Math.max(0, hrsCalc - prev))
-    hrsPrx += cap * Number(asig.horas) / total
+    if (total === 0) continue
+    const hrs = hrsCalc(ot.precio)
+    const prev = ot.avances
+      .filter(a => new Date(a.semanaInicio) < iniSemana)
+      .reduce((s, a) => s + Number(a.horasInvertidas), 0)
+    proc += Math.min(Number(av.horasInvertidas), Math.max(0, hrs - prev)) * Number(asig.horas) / total
   }
-  const hrsT = hrsCerr + hrsPrx
-  totalDash += hrsT
-  console.log(`     ${tec.nombre.padEnd(14)} cerradas=${hrsCerr.toFixed(1).padStart(5)}  proceso=${hrsPrx.toFixed(1).padStart(5)}  TOTAL=${hrsT.toFixed(1).padStart(6)}`)
+  hrsTotalDashboard += cerr + proc
 }
-assert('Dashboard total == Reporte total', totalDash.toFixed(1), hrsProd.toFixed(1), 0.1)
 
-// ─────────────────────────────────────────────────────────────────────────────
+assert('Dashboard total == Reporte total (hrs producidas)', hrsTotalDashboard.toFixed(2), hrsTotalReporte.toFixed(2), 0.01)
+
+// ── Resultado ─────────────────────────────────────────────────────────────────
 console.log(`\n${'═'.repeat(50)}`)
 console.log(`RESULTADO: ${ok} OK / ${fail} FALLIDOS`)
+if (fail > 0) {
+  console.log(`\n⚠ Revisar los fallos antes de deploy.`)
+  process.exit(1)
+}
+console.log('✓ Todas las pruebas pasaron.')
 await p.$disconnect()

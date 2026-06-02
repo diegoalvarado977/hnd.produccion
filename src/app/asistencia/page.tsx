@@ -181,9 +181,8 @@ export default function AsistenciaPage() {
               )
             })}
           </div>
-        </div>
-        </div>
         )}
+        </div>
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-3">
